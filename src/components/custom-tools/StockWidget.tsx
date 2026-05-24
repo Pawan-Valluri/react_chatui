@@ -70,7 +70,7 @@ export function StockWidget({ result, status }: StockWidgetProps) {
 
   if (isRunning) {
     return (
-      <div className="w-full max-w-sm glass-card rounded-2xl p-5 border border-indigo-500/20 animate-pulse-border my-2">
+      <div className="w-full max-w-sm bg-[#111318] border-white/10 rounded-2xl p-5 border border-blue-500/20 animate-pulse-border my-2">
         <div className="flex justify-between items-start mb-4">
           <div className="space-y-2">
             <div className="h-6 w-24 bg-white/5 rounded-md animate-pulse" />
@@ -193,7 +193,7 @@ export function StockWidget({ result, status }: StockWidgetProps) {
           <div className="flex justify-between items-center text-gray-500 font-medium">
             <span>Rating</span>
             <span className={`font-bold flex items-center gap-1 ${
-              result.recommendation.includes("Buy") ? "text-indigo-400" : "text-gray-400"
+              result.recommendation.includes("Buy") ? "text-blue-400" : "text-gray-400"
             }`}>
               <Award className="w-3.5 h-3.5" />
               {result.recommendation}

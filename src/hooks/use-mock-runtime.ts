@@ -221,12 +221,20 @@ export function useMockRuntime(threadId: string, initialMessages: any[]) {
         // -------------------------------------------------------------
         if (BACKEND_CONFIG.USE_BACKEND_API) {
           try {
+            const parentId = messages.length > 1 ? messages[messages.length - 2].id : null;
             const response = await fetch(BACKEND_CONFIG.BACKEND_URL, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                messages: messages.map(m => ({ role: m.role, content: m.content }))
+                threadId,
+                parentId,
+                messages: messages.map(m => ({ 
+                  id: m.id,
+                  role: m.role, 
+                  content: m.content 
+                }))
               }),
+              credentials: "include", // Essential for cookie-based SSO validation
               signal: abortSignal
             });
 

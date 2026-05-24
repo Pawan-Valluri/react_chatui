@@ -3,79 +3,118 @@ import { Sidebar } from "./components/Sidebar";
 import { ChatInterface } from "./components/ChatInterface";
 import {
   getThreads,
-  getActiveThreadId,
-  setActiveThreadId,
   createNewThread,
-  updateThreadMessages,
   deleteThread,
-  renameThread
+  renameThread,
+  getUserProfile,
+  type ChatThread
 } from "./utils/storage";
-import type { ChatThread } from "./utils/storage";
 
 function App() {
   const [threads, setThreads] = useState<ChatThread[]>([]);
   const [activeThreadId, setActiveThreadStateId] = useState<string | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 768);
 
-  // Initialize threads from local storage on mount
+  // Initialize threads from backend REST service on mount
   useEffect(() => {
-    let storedThreads = getThreads();
-    let storedActiveId = getActiveThreadId();
+    const initApp = async () => {
+      try {
+        // 1. Load active SSO profile
+        const profile = await getUserProfile();
+        setUser(profile);
 
-    if (storedThreads.length === 0) {
-      const defaultThread = createNewThread("New Chat");
-      storedThreads = [defaultThread];
-      storedActiveId = defaultThread.id;
-    } else if (!storedActiveId || !storedThreads.some((t) => t.id === storedActiveId)) {
-      storedActiveId = storedThreads[0].id;
-      setActiveThreadId(storedActiveId);
-    }
+        // 2. Load threads from Postgres
+        let storedThreads = await getThreads();
 
-    setThreads(storedThreads);
-    setActiveThreadStateId(storedActiveId);
+        if (storedThreads.length === 0) {
+          const defaultThread = await createNewThread("New Chat");
+          storedThreads = [defaultThread];
+        }
+
+        setThreads(storedThreads);
+
+        // 3. Keep active thread ID purely in tab session state (clear on close)
+        let activeId = sessionStorage.getItem("premium-chat-active-thread-id");
+        if (!activeId || !storedThreads.some((t) => t.id === activeId)) {
+          activeId = storedThreads[0].id;
+          sessionStorage.setItem("premium-chat-active-thread-id", activeId);
+        }
+        
+        setActiveThreadStateId(activeId);
+      } catch (err) {
+        console.error("Failed to initialize application session state:", err);
+      }
+    };
+
+    initApp();
   }, []);
 
   const handleSelectThread = (id: string) => {
-    setActiveThreadId(id);
+    sessionStorage.setItem("premium-chat-active-thread-id", id);
     setActiveThreadStateId(id);
   };
 
-  const handleNewThread = () => {
-    const newThread = createNewThread("New Chat");
-    setThreads(getThreads());
-    setActiveThreadStateId(newThread.id);
+  const handleNewThread = async () => {
+    try {
+      const newThread = await createNewThread("New Chat");
+      const allThreads = await getThreads();
+      setThreads(allThreads);
+      sessionStorage.setItem("premium-chat-active-thread-id", newThread.id);
+      setActiveThreadStateId(newThread.id);
+    } catch (err) {
+      console.error("Failed to create new thread session:", err);
+    }
   };
 
-  const handleDeleteThread = (id: string) => {
-    const nextActiveId = deleteThread(id);
-    setThreads(getThreads());
-    setActiveThreadStateId(nextActiveId);
+  const handleDeleteThread = async (id: string) => {
+    try {
+      await deleteThread(id);
+      const allThreads = await getThreads();
+      setThreads(allThreads);
+      
+      const currentActiveId = sessionStorage.getItem("premium-chat-active-thread-id");
+      let nextActiveId = currentActiveId;
+      
+      if (currentActiveId === id) {
+        nextActiveId = allThreads[0]?.id || null;
+        if (nextActiveId) {
+          sessionStorage.setItem("premium-chat-active-thread-id", nextActiveId);
+        } else {
+          sessionStorage.removeItem("premium-chat-active-thread-id");
+        }
+      }
+      setActiveThreadStateId(nextActiveId);
+    } catch (err) {
+      console.error("Failed to delete thread session:", err);
+    }
   };
 
-  const handleRenameThread = (id: string, newTitle: string) => {
-    renameThread(id, newTitle);
-    setThreads(getThreads());
+  const handleRenameThread = async (id: string, newTitle: string) => {
+    try {
+      await renameThread(id, newTitle);
+      const allThreads = await getThreads();
+      setThreads(allThreads);
+    } catch (err) {
+      console.error("Failed to rename thread session:", err);
+    }
   };
 
   const handleToggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
   };
 
-  // Find active thread details
+  // Dynamic thread settings fetched from backend
   const activeThread = threads.find((t) => t.id === activeThreadId) || null;
-  const initialMessages = activeThread ? activeThread.messages : [];
   const threadTitle = activeThread ? activeThread.title : "Chat Session";
 
-  // Callback to persist messages inside storage and sync sidebar thread titles
+  // Callback triggers after an agent interaction completes to sync thread titles
   const handleMessagesChange = useCallback(
-    (newMessages: readonly any[]) => {
+    () => {
       if (!activeThreadId) return;
-
-      // Persist messages in localStorage
-      updateThreadMessages(activeThreadId, newMessages as any[]);
-
-      // Sync threads state to update Sidebar titles in real-time!
-      setThreads(getThreads());
+      getThreads().then((allThreads) => {
+        setThreads(allThreads);
+      });
     },
     [activeThreadId]
   );
@@ -92,15 +131,15 @@ function App() {
         onRenameThread={handleRenameThread}
         isOpen={isSidebarOpen}
         onToggle={handleToggleSidebar}
+        user={user}
       />
 
       {/* Main Chat Interface */}
-      {/* key={activeThreadId} isolates component lifecycles to avoid switching race conditions */}
       {activeThreadId && (
         <ChatInterface
           key={activeThreadId}
           activeThreadId={activeThreadId}
-          initialMessages={initialMessages}
+          initialMessages={[]} // Rehydrated dynamically by tree GET api in ChatInterface
           threadTitle={threadTitle}
           onToggleSidebar={handleToggleSidebar}
           onNewThread={handleNewThread}

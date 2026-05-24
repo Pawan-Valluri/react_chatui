@@ -35,7 +35,7 @@ export function Markdown({ content }: MarkdownProps) {
             >
               <div className="flex justify-between items-center px-4 py-2 bg-zinc-900 border-b border-white/5 text-gray-400">
                 <span className="flex items-center gap-1.5 font-sans font-semibold text-[10px] uppercase tracking-wider">
-                  <Terminal className="w-3 h-3 text-indigo-400" />
+                  <Terminal className="w-3 h-3 text-blue-400" />
                   {lang || "code"}
                 </span>
                 <button
@@ -83,14 +83,14 @@ export function Markdown({ content }: MarkdownProps) {
               // Headings
               if (trimmed.startsWith("### ")) {
                 return (
-                  <h4 key={lIdx} className="font-display font-bold text-sm text-indigo-300 mt-3 mb-1">
+                  <h4 key={lIdx} className="font-display font-bold text-sm text-blue-300 mt-3 mb-1">
                     {formatInline(trimmed.substring(4))}
                   </h4>
                 );
               }
               if (trimmed.startsWith("## ")) {
                 return (
-                  <h3 key={lIdx} className="font-display font-bold text-base text-indigo-400 mt-4 mb-2">
+                  <h3 key={lIdx} className="font-display font-bold text-base text-blue-400 mt-4 mb-2">
                     {formatInline(trimmed.substring(3))}
                   </h3>
                 );
@@ -134,7 +134,7 @@ function formatInline(text: string) {
     }
     if (part.startsWith("`") && part.endsWith("`")) {
       return (
-        <code key={index} className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 font-mono text-xs text-indigo-300">
+        <code key={index} className="px-1.5 py-0.5 rounded bg-white/5 border border-white/10 font-mono text-xs text-blue-300">
           {part.substring(1, part.length - 1)}
         </code>
       );

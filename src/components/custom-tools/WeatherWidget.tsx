@@ -78,7 +78,7 @@ export function WeatherWidget({ result, status }: WeatherWidgetProps) {
 
   if (isRunning) {
     return (
-      <div className="w-full max-w-sm glass-card rounded-2xl p-5 border border-indigo-500/20 animate-pulse-border my-2">
+      <div className="w-full max-w-sm bg-[#111318] border-white/10 rounded-2xl p-5 border border-blue-500/20 animate-pulse-border my-2">
         <div className="flex justify-between items-start mb-4">
           <div className="space-y-2">
             <div className="h-6 w-32 bg-white/5 rounded-md animate-pulse" />
@@ -105,7 +105,7 @@ export function WeatherWidget({ result, status }: WeatherWidgetProps) {
   const bgGradient = isSunny
     ? "from-amber-500/10 to-orange-500/5 border-orange-500/20"
     : isRainy
-    ? "from-blue-600/10 to-indigo-950/5 border-blue-500/20"
+    ? "from-blue-600/10 to-blue-950/5 border-blue-500/20"
     : "from-slate-500/10 to-zinc-950/5 border-slate-500/20";
 
   const IconComponent = ({ name, className }: { name: string; className?: string }) => {
@@ -132,7 +132,7 @@ export function WeatherWidget({ result, status }: WeatherWidgetProps) {
           ) : isRainy ? (
             <CloudRain className="w-6 h-6 text-blue-400 animate-bounce" />
           ) : (
-            <Cloud className="w-6 h-6 text-indigo-300" />
+            <Cloud className="w-6 h-6 text-blue-300" />
           )}
         </div>
       </div>

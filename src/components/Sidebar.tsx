@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { MouseEvent, KeyboardEvent } from "react";
-import { MessageSquare, Plus, Trash2, Edit2, Check, X, Menu, Bot } from "lucide-react";
+import { MessageSquare, Plus, Trash2, Edit2, Check, X, Menu, Bot, LogOut } from "lucide-react";
 import type { ChatThread } from "../utils/storage";
+import { BACKEND_CONFIG } from "../config";
 
 interface SidebarProps {
   threads: ChatThread[];
@@ -12,6 +13,7 @@ interface SidebarProps {
   onRenameThread: (id: string, newTitle: string) => void;
   isOpen: boolean;
   onToggle: () => void;
+  user: any; // Dynamic SSO Authenticated User
 }
 
 export function Sidebar({
@@ -22,7 +24,8 @@ export function Sidebar({
   onDeleteThread,
   onRenameThread,
   isOpen,
-  onToggle
+  onToggle,
+  user
 }: SidebarProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
@@ -68,12 +71,12 @@ export function Sidebar({
           <Menu className="w-6 h-6" />
         </button>
         <div className="flex items-center gap-2">
-          <Bot className="w-5 h-5 text-indigo-400" />
+          <Bot className="w-5 h-5 text-blue-400" />
           <span className="font-display font-semibold text-lg text-white">Antigravity Chat</span>
         </div>
         <button
           onClick={onNewThread}
-          className="p-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-md shadow-indigo-600/10"
+          className="p-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition-all shadow-md shadow-blue-600/10"
         >
           <Plus className="w-5 h-5" />
         </button>
@@ -89,14 +92,14 @@ export function Sidebar({
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-50 w-72 glass-panel flex flex-col transition-transform duration-300 ease-in-out md:translate-x-0 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed md:static inset-y-0 left-0 z-50 w-72 shrink-0 bg-[#0b0c10] border-r border-white/5 flex flex-col transition-all duration-300 ease-in-out ${
+          isOpen ? "translate-x-0 ml-0" : "-translate-x-full md:-ml-72"
         }`}
       >
         {/* Sidebar Header */}
         <div className="p-5 flex items-center justify-between border-b border-white/5">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-lg bg-indigo-600/10 border border-indigo-500/20 text-indigo-400">
+            <div className="p-2 rounded-lg bg-blue-600/10 border border-blue-500/20 text-blue-400">
               <Bot className="w-5 h-5 animate-pulse" />
             </div>
             <span className="font-display font-bold text-lg text-white tracking-wide">
@@ -105,7 +108,7 @@ export function Sidebar({
           </div>
           <button
             onClick={onToggle}
-            className="md:hidden p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white"
+            className="p-1.5 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
@@ -118,7 +121,7 @@ export function Sidebar({
               onNewThread();
               if (window.innerWidth < 768) onToggle();
             }}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-sm transition-all shadow-lg shadow-indigo-600/20 hover:shadow-indigo-600/30 group active:scale-[0.98]"
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 group active:scale-[0.98]"
           >
             <Plus className="w-4 h-4 transition-transform group-hover:rotate-90" />
             <span>New Chat</span>
@@ -151,14 +154,14 @@ export function Sidebar({
                   }}
                   className={`group relative flex items-center justify-between px-3 py-3 rounded-xl cursor-pointer transition-all duration-200 border ${
                     isActive
-                      ? "bg-indigo-600/10 border-indigo-500/25 text-white"
+                      ? "bg-blue-600/10 border-blue-500/25 text-white"
                       : "bg-transparent border-transparent hover:bg-white/[0.03] text-gray-400 hover:text-gray-200"
                   }`}
                 >
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
                     <MessageSquare
                       className={`w-4.5 h-4.5 shrink-0 ${
-                        isActive ? "text-indigo-400" : "text-gray-500 group-hover:text-gray-400"
+                        isActive ? "text-blue-400" : "text-gray-500 group-hover:text-gray-400"
                       }`}
                     />
                     {isEditing ? (
@@ -167,7 +170,7 @@ export function Sidebar({
                         value={editTitle}
                         onChange={(e) => setEditTitle(e.target.value)}
                         onKeyDown={(e) => handleKeyDown(thread.id, e)}
-                        className="w-full bg-white/5 border border-white/10 rounded px-2 py-0.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+                        className="w-full bg-white/5 border border-white/10 rounded px-2 py-0.5 text-sm text-white focus:outline-none focus:border-blue-500"
                         autoFocus
                         onClick={(e) => e.stopPropagation()}
                       />
@@ -205,7 +208,7 @@ export function Sidebar({
                     <div className="flex items-center gap-1 shrink-0">
                       <button
                         onClick={(e) => saveEdit(thread.id, e)}
-                        className="p-1 rounded-md bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600/30 transition-colors"
+                        className="p-1 rounded-md bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 transition-colors"
                       >
                         <Check className="w-3.5 h-3.5" />
                       </button>
@@ -225,14 +228,18 @@ export function Sidebar({
 
         {/* User profile footer */}
         <div className="p-4 border-t border-white/5 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 via-blue-500 to-cyan-400 p-0.5 shrink-0">
             <div className="w-full h-full rounded-full bg-[#0b0c10] flex items-center justify-center text-xs font-bold text-white uppercase tracking-wider">
-              AG
+              {user && user.firstname ? (user.firstname[0] + (user.lastname ? user.lastname[0] : "")) : "DG"}
             </div>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-white truncate">Developer Guest</p>
-            <p className="text-xs text-gray-500 truncate">Vite React Workspace</p>
+            <p className="text-sm font-semibold text-white truncate">
+              {user ? user.fullname : "Developer Guest"}
+            </p>
+            <p className="text-xs text-gray-500 truncate">
+              {user && user.groups && user.groups.includes("SSO_APP_ADMIN") ? "System Admin" : "Amex Centurion Member"}
+            </p>
           </div>
         </div>
       </aside>

@@ -1,5 +1,7 @@
+import { BACKEND_CONFIG } from "../config";
+
 export interface MessagePart {
-  type: "text" | "tool-call" | "tool-result";
+  type: "text" | "tool-call" | "tool-result" | "reasoning";
   text?: string;
   toolName?: string;
   toolCallId?: string;
@@ -20,96 +22,106 @@ export interface ChatThread {
   messages: ThreadMessage[];
 }
 
-const THREADS_KEY = "premium-chat-threads";
-const ACTIVE_THREAD_ID_KEY = "premium-chat-active-thread-id";
+// REST Client Helper ensuring cookie pass-through for SSO
+async function apiFetch(endpoint: string, options: RequestInit = {}) {
+  const url = `${BACKEND_CONFIG.BASE_URL}${endpoint}`;
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options.headers,
+    },
+    credentials: "include", // Crucial for SSO cookies
+  });
+  
+  if (!response.ok) {
+    throw new Error(`API returned status ${response.status}`);
+  }
+  
+  return response.json();
+}
 
-export function getThreads(): ChatThread[] {
+export async function getThreads(): Promise<ChatThread[]> {
   try {
-    const data = localStorage.getItem(THREADS_KEY);
-    return data ? JSON.parse(data) : [];
+    const list = await apiFetch("/threads");
+    return list || [];
   } catch (e) {
-    console.error("Error reading threads from local storage", e);
+    console.error("Error reading threads from backend", e);
     return [];
   }
 }
 
-export function saveThreads(threads: ChatThread[]): void {
+export async function getThreadDetail(threadId: string): Promise<any> {
   try {
-    localStorage.setItem(THREADS_KEY, JSON.stringify(threads));
+    return await apiFetch(`/threads/${threadId}`);
   } catch (e) {
-    console.error("Error writing threads to local storage", e);
+    console.error(`Error loading thread detail for ${threadId}`, e);
+    return null;
   }
 }
 
-export function getActiveThreadId(): string | null {
-  return localStorage.getItem(ACTIVE_THREAD_ID_KEY);
-}
-
-export function setActiveThreadId(id: string | null): void {
-  if (id) {
-    localStorage.setItem(ACTIVE_THREAD_ID_KEY, id);
-  } else {
-    localStorage.removeItem(ACTIVE_THREAD_ID_KEY);
-  }
-}
-
-export function createNewThread(title = "New Chat"): ChatThread {
+export async function createNewThread(title = "New Chat"): Promise<ChatThread> {
   const newThread: ChatThread = {
     id: crypto.randomUUID(),
     title,
     createdAt: Date.now(),
     messages: []
   };
-  const threads = getThreads();
-  threads.unshift(newThread);
-  saveThreads(threads);
-  setActiveThreadId(newThread.id);
+  
+  try {
+    await apiFetch("/threads", {
+      method: "POST",
+      body: JSON.stringify({
+        id: newThread.id,
+        title: newThread.title,
+        createdAt: newThread.createdAt
+      }),
+    });
+  } catch (e) {
+    console.error("Error creating new thread on backend", e);
+  }
+  
   return newThread;
 }
 
-export function updateThreadMessages(threadId: string, messages: any[]): void {
-  const threads = getThreads();
-  const index = threads.findIndex(t => t.id === threadId);
-  if (index !== -1) {
-    threads[index].messages = messages.map(m => ({
-      id: m.id || crypto.randomUUID(),
-      role: m.role,
-      content: m.content || []
-    }));
-    
-    // Auto-generate title from the first user message if it's currently "New Chat"
-    if (threads[index].title === "New Chat" && messages.length > 0) {
-      const firstUserMessage = messages.find(m => m.role === "user");
-      if (firstUserMessage) {
-        const textContent = firstUserMessage.content.find((p: any) => p.type === "text")?.text || "";
-        if (textContent) {
-          threads[index].title = textContent.slice(0, 30) + (textContent.length > 30 ? "..." : "");
-        }
-      }
-    }
-    
-    saveThreads(threads);
+export async function deleteThread(threadId: string): Promise<void> {
+  try {
+    await apiFetch(`/threads/${threadId}`, {
+      method: "DELETE",
+    });
+  } catch (e) {
+    console.error(`Error deleting thread ${threadId}`, e);
   }
 }
 
-export function deleteThread(threadId: string): string | null {
-  let threads = getThreads();
-  threads = threads.filter(t => t.id !== threadId);
-  saveThreads(threads);
-  
-  if (getActiveThreadId() === threadId) {
-    const nextActive = threads[0]?.id || null;
-    setActiveThreadId(nextActive);
-    return nextActive;
+export async function renameThread(threadId: string, newTitle: string): Promise<void> {
+  try {
+    await apiFetch(`/threads/${threadId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ title: newTitle }),
+    });
+  } catch (e) {
+    console.error(`Error renaming thread ${threadId}`, e);
   }
-  return getActiveThreadId();
 }
 
-export function renameThread(threadId: string, newTitle: string): void {
-  const threads = getThreads();
-  const index = threads.findIndex(t => t.id === threadId);
-  if (index !== -1) {
-    threads[index].title = newTitle;
-    saveThreads(threads);
+// Synchronize frontend branch tree modifications back to PostgreSQL
+export async function syncThreadTree(threadId: string, headId: string | null, messages: any[]): Promise<void> {
+  try {
+    await apiFetch(`/threads/${threadId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ headId, messages }),
+    });
+  } catch (e) {
+    console.error(`Error syncing thread tree for ${threadId}`, e);
+  }
+}
+
+export async function getUserProfile(): Promise<any> {
+  try {
+    return await apiFetch("/user/me");
+  } catch (e) {
+    console.error("Error fetching user session profile", e);
+    return null;
   }
 }
