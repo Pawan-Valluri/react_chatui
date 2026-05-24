@@ -154,10 +154,11 @@ async def get_current_user(request: Request):
         if token:
             try:
                 import httpx
-                async with httpx.AsyncClient() as client:
+                authblue_url = os.getenv("AUTHBLUE_USERINFO_URL", "https://authbluetokens-dev.aexp.com/v1/user/userinfo")
+                async with httpx.AsyncClient(trust_env=True) as client:
                     headers = {"Cookie": f"bluetoken={token}"}
                     response = await client.get(
-                        "https://authbluetokens-dev.aexp.com/v1/user/userinfo", 
+                        authblue_url, 
                         headers=headers,
                         timeout=5.0
                     )
@@ -175,9 +176,16 @@ async def get_current_user(request: Request):
 # ==================================================================================
 app = FastAPI(title="Optimized LangGraph Backend", version="2.0.0")
 
+# Support dynamic enterprise CORS environments via environment variable
+cors_origins_env = os.getenv("CORS_ORIGINS")
+if cors_origins_env:
+    allow_origins = [o.strip() for o in cors_origins_env.split(",") if o.strip()]
+else:
+    allow_origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -248,19 +256,19 @@ def search_web(query: str) -> str:
     q = query.lower()
     summary = "Vite React projects leverage advanced ESM features for blazing fast hot module replacement (HMR)."
     sources = [
-        {"name": "Vite Official Guide", "url": "https://vite.dev", "snippet": "Getting started with Vite React templates.", "favicon": "https://vite.dev/logo.svg"},
-        {"name": "React Docs", "url": "https://react.dev", "snippet": "Best practices for React components.", "favicon": "https://react.dev/favicon.ico"}
+        {"name": "Vite Official Guide", "url": "https://vite.dev", "snippet": "Getting started with Vite React templates.", "favicon": ""},
+        {"name": "React Docs", "url": "https://react.dev", "snippet": "Best practices for React components.", "favicon": ""}
     ]
 
     if "nvidia" in q:
         summary = "NVIDIA Corporation is headquartered in Santa Clara, California, and is traded under the stock symbol NVDA."
-        sources = [{"name": "NVIDIA Investor", "url": "https://nvidia.com", "snippet": "NVIDIA corporate facts and headquarters location details.", "favicon": "https://nvidia.com/favicon.ico"}]
+        sources = [{"name": "NVIDIA Investor", "url": "https://nvidia.com", "snippet": "NVIDIA corporate facts and headquarters location details.", "favicon": ""}]
     elif "zustand" in q:
         summary = "Zustand was created by a developer team led by a core maintainer based in Tokyo, Japan."
-        sources = [{"name": "Zustand GitHub", "url": "https://github.com/pmndrs/zustand", "snippet": "Small, fast and scalable bearbones state-management solution.", "favicon": "https://github.com/favicon.ico"}]
+        sources = [{"name": "Zustand GitHub", "url": "https://github.com/pmndrs/zustand", "snippet": "Small, fast and scalable bearbones state-management solution.", "favicon": ""}]
     elif "microsoft" in q:
         summary = "Microsoft Corporation is headquartered in Redmond, Washington, and is traded under the stock symbol MSFT."
-        sources = [{"name": "Microsoft Investor", "url": "https://microsoft.com", "snippet": "Microsoft investor relations and Redmond headquarters information.", "favicon": "https://microsoft.com/favicon.ico"}]
+        sources = [{"name": "Microsoft Investor", "url": "https://microsoft.com", "snippet": "Microsoft investor relations and Redmond headquarters information.", "favicon": ""}]
     
     return json.dumps({"query": query, "summary": summary, "sourceCount": len(sources), "sources": sources})
 
@@ -546,6 +554,10 @@ def convert_to_langchain_messages(messages_data: list) -> list:
 @app.get("/api/user/me")
 def get_user_me(current_user = Depends(get_current_user)):
     return current_user
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return Response(status_code=204)
 
 @app.get("/api/threads")
 def get_threads(current_user = Depends(get_current_user), db = Depends(get_db)):

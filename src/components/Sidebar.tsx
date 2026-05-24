@@ -1,8 +1,7 @@
 import { useState } from "react";
 import type { MouseEvent, KeyboardEvent } from "react";
-import { MessageSquare, Plus, Trash2, Edit2, Check, X, Menu, Bot, LogOut } from "lucide-react";
+import { MessageSquare, Plus, Trash2, Edit2, Check, X, Menu, Bot } from "lucide-react";
 import type { ChatThread } from "../utils/storage";
-import { BACKEND_CONFIG } from "../config";
 
 interface SidebarProps {
   threads: ChatThread[];

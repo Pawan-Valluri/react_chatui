@@ -16,24 +16,24 @@ const searchTool = tool({
     const qLower = query.toLowerCase();
     let summary = "Vite React projects leverage advanced ESM features for blazing fast hot module replacement (HMR). Standard configurations rely on plugins like @vitejs/plugin-react alongside modern layout systems.";
     let sources = [
-      { name: "Vite Official Guide", url: "https://vite.dev", snippet: "Getting started with Vite React templates and asset optimization configs.", favicon: "https://vite.dev/logo.svg" },
-      { name: "React Docs", url: "https://react.dev", snippet: "Best practices for React components, Hooks API, and build tool chains.", favicon: "https://react.dev/favicon.ico" },
-      { name: "Tailwind CSS v4", url: "https://tailwindcss.com", snippet: "Integrating Tailwind v4 plugin-based builds inside modern compiler paths.", favicon: "https://tailwindcss.com/favicons/favicon.ico" }
+      { name: "Vite Official Guide", url: "https://vite.dev", snippet: "Getting started with Vite React templates and asset optimization configs.", favicon: "" },
+      { name: "React Docs", url: "https://react.dev", snippet: "Best practices for React components, Hooks API, and build tool chains.", favicon: "" },
+      { name: "Tailwind CSS v4", url: "https://tailwindcss.com", snippet: "Integrating Tailwind v4 plugin-based builds inside modern compiler paths.", favicon: "" }
     ];
 
     if (qLower.includes("state") || qLower.includes("zustand") || qLower.includes("redux")) {
       summary = "Zustand is widely regarded as a high-performance, lightweight state management library for React. It offers simple hook-based APIs, avoids unnecessary re-renders, and acts as a robust replacement for heavier legacy frameworks like Redux in modern greenfield apps.";
       sources = [
-        { name: "Zustand GitHub", url: "https://github.com/pmndrs/zustand", snippet: "Bearish small, fast and scalable bearbones state-management solution.", favicon: "https://github.com/favicon.ico" },
-        { name: "NPM Package", url: "https://npmjs.com/package/zustand", snippet: "Download stats, package sizes, and developer installation guides.", favicon: "https://www.npmjs.com/static/images/touch-icons/favicon-32x32.png" },
-        { name: "Dev.to Articles", url: "https://dev.to", snippet: "A comparison of React Context, Zustand, and Recoil in production environments.", favicon: "https://dev.to/favicon.ico" }
+        { name: "Zustand GitHub", url: "https://github.com/pmndrs/zustand", snippet: "Bearish small, fast and scalable bearbones state-management solution.", favicon: "" },
+        { name: "NPM Package", url: "https://npmjs.com/package/zustand", snippet: "Download stats, package sizes, and developer installation guides.", favicon: "" },
+        { name: "Dev.to Articles", url: "https://dev.to", snippet: "A comparison of React Context, Zustand, and Recoil in production environments.", favicon: "" }
       ];
     } else if (qLower.includes("next") || qLower.includes("vs") || qLower.includes("performance")) {
       summary = "Vite offers significantly faster development server start times and HMR because it serves source code over native ESM, delegating transpilation to the browser. Next.js excels at production-grade Server-Side Rendering (SSR), Static Site Generation (SSG), and unified API routing structures.";
       sources = [
-        { name: "Vercel NextJS", url: "https://nextjs.org", snippet: "NextJS React framework docs detailing server components and file routing.", favicon: "https://nextjs.org/favicon.ico" },
-        { name: "Vite Configs", url: "https://vite.dev/config/", snippet: "Configuring build output directories, base assets, and environment variables.", favicon: "https://vite.dev/logo.svg" },
-        { name: "LogRocket Blog", url: "https://blog.logrocket.com", snippet: "Detailed benchmarks comparing Vite-bundled SPAs vs Next.js statically exported web apps.", favicon: "https://blog.logrocket.com/favicon.ico" }
+        { name: "Vercel NextJS", url: "https://nextjs.org", snippet: "NextJS React framework docs detailing server components and file routing.", favicon: "" },
+        { name: "Vite Configs", url: "https://vite.dev/config/", snippet: "Configuring build output directories, base assets, and environment variables.", favicon: "" },
+        { name: "LogRocket Blog", url: "https://blog.logrocket.com", snippet: "Detailed benchmarks comparing Vite-bundled SPAs vs Next.js statically exported web apps.", favicon: "" }
       ];
     }
 
@@ -99,15 +99,19 @@ export function SearchWidget({ result, status }: SearchWidgetProps) {
               rel="noreferrer"
               className="flex items-center gap-2 p-2 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/10 transition-all text-left min-w-0"
             >
-              <img
-                src={src.favicon}
-                alt=""
-                onError={(e) => {
-                  // Fallback to Globe icon if favicon fails to load
-                  (e.target as HTMLElement).style.display = "none";
-                }}
-                className="w-3.5 h-3.5 rounded shrink-0 object-contain"
-              />
+              {src.favicon ? (
+                <img
+                  src={src.favicon}
+                  alt=""
+                  onError={(e) => {
+                    // Fallback to Globe icon if favicon fails to load
+                    (e.target as HTMLElement).style.display = "none";
+                  }}
+                  className="w-3.5 h-3.5 rounded shrink-0 object-contain"
+                />
+              ) : (
+                <Globe className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+              )}
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold text-white truncate">
                   {src.name}

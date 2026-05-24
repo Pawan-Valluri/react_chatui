@@ -86,7 +86,7 @@ export function ChatInterface({
         try {
           const exported = runtime.thread.export();
           if (exported && exported.messages && exported.messages.length > 0) {
-            await syncThreadTree(activeThreadId, exported.headId, exported.messages);
+            await syncThreadTree(activeThreadId, exported.headId || null, exported.messages);
             onMessagesChange(); // Refresh sidebar titles
           }
         } catch (err) {

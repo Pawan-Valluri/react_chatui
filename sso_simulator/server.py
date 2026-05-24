@@ -73,7 +73,6 @@ LOGIN_HTML = """
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AuthBlue Identity Gateway</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-main: #06070a;
@@ -82,7 +81,7 @@ LOGIN_HTML = """
             --accent-glow: #2563eb;
             --text-primary: #f3f4f6;
             --text-secondary: #9ca3af;
-            --font-family: 'Outfit', sans-serif;
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
         * {
@@ -485,6 +484,10 @@ async def post_userinfo(request: Request, body: UserInfoRequest):
     except Exception as e:
         logger.error(f"SSO Gateway [POST /v1/user/userinfo]: Token decoding failed: {e}")
         return {"status": "error", "message": f"Token decoding failed: {str(e)}"}
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return Response(status_code=204)
 
 if __name__ == "__main__":
     import uvicorn

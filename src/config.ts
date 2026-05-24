@@ -9,9 +9,10 @@ export const BACKEND_CONFIG = {
   USE_BACKEND_API: true,
 
   // Base API endpoint where your FastAPI chat service runs
-  BASE_URL: "http://localhost:8080/api",
+  // Use relative path for production (behind proxy) or absolute for local dev
+  BASE_URL: import.meta.env.VITE_API_URL || "/api",
 
   // The local uvicorn server endpoint where your FastAPI chat service runs
-  BACKEND_URL: "http://localhost:8080/api/chat",
+  BACKEND_URL: import.meta.env.VITE_BACKEND_URL || "/api/chat",
 
 };
